@@ -14,6 +14,7 @@
     'license': 'LGPL-3',
     'depends': [
         'crm',
+        'hr_recruitment',
         'website',
     ],
     'data': [],
