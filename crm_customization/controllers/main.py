@@ -25,19 +25,17 @@ class ApplicantSummaryRecovery(http.Controller):
 
     @http.route(
         "/ans/backfill_applicant_summaries",
-        type="json",
+        type="http",
         auth="user",
-        methods=["POST"],
+        methods=["GET"],
     )
-    def backfill_applicant_summaries(self, limit=5):
+    def backfill_applicant_summaries(self):
         if not request.env.user.has_group("base.group_system"):
             raise AccessDenied()
 
-        limit = max(1, min(int(limit), 100))
-        applicants = request.env["hr.applicant"].search(
+        applicants = request.env["hr.applicant"].with_context(active_test=False).search(
             [("description", "in", [False, ""])],
             order="id desc",
-            limit=limit,
         )
 
         updated_ids = []
@@ -63,4 +61,9 @@ class ApplicantSummaryRecovery(http.Controller):
             ).format(Markup("").join(rows))
             updated_ids.append(applicant.id)
 
-        return {"updated_count": len(updated_ids), "updated_ids": updated_ids}
+        return request.make_response(
+            "<h2>Applicant summary recovery completed</h2>"
+            f"<p>Updated records: {len(updated_ids)}</p>"
+            "<p>Existing populated summaries were not changed.</p>",
+            headers=[("Content-Type", "text/html; charset=utf-8")],
+        )
